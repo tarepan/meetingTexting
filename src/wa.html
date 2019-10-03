@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <script src="https://unpkg.com/hotkeys-js/dist/hotkeys.min.js"></script>
+  </head>
+  <body>
+    focusLoop: setStart [ctl+space], setEnd&Start[ctl+shift+space],
+    finishFocusLoop[ctl+shift+alt+space]<br />
+    <input id="inputN" value="02" />
+    <audio id="audio1"></audio>
+    <button id="button1">start</button>
+    <button id="buttonPause">pause</button>
+    <button id="buttonResume">resume</button>
+    <button id="buttonSeek">seek</button>
+    <button id="buttonFF">fastForward</button>
+    <br />
+    <textarea id="memo">value</textarea>
+    <script>
+      const memo = document.querySelector("#memo");
+      myStorage = localStorage;
+      memo.value = myStorage.getItem("memo");
+      setInterval(() => myStorage.setItem("memo", memo.value), 1000);
+    </script>
+
+    <script>
+      const audio1 = document.querySelector("#audio1");
+      const button1 = document.querySelector("#button1");
+      const pauseButton = document.querySelector("#buttonPause");
+      const resumeButton = document.querySelector("#buttonResume");
+      const seekButton = document.querySelector("#buttonSeek");
+      const ffButton = document.querySelector("#buttonFF");
+      const inputN = document.querySelector("#inputN");
+
+      let defaultSpeed = 2;
+      let seekPoint = 1;
+      let focusLoopStart = 0;
+      let focusLoopEnd = 0;
+      let nowFocusLoop = false;
+
+      // set default speed
+      audio1.playbackRate = defaultSpeed;
+      function setSpeed() {
+        audio1.playbackRate = nowFocusLoop ? defaultSpeed : 1;
+      }
+
+      // ## focusLoop
+      // loop interval which is played with normal speed (x1).
+      // With focusLoop, we can hear entire audio with high speed but enable detail hearing in specified region.
+
+      // currentTime check
+      setInterval(() => {
+        console.log(audio1.currentTime);
+      }, 1000);
+      button1.addEventListener("click", evt => {
+        // audio1.src = `../edit/year_end_meeting_H30-TI-1per1-${inputN.value}.flac`;
+        audio1.src = `../edit/regs/reguratory__TI_1per1-${inputN.value}.flac`;
+        audio1.load();
+        setSpeed();
+        audio1.play();
+      });
+
+      // seek
+      seekButton.addEventListener("click", evt => {
+        console.log("seek!");
+        audio1.currentTime = seekPoint;
+      });
+
+      // pause
+      pauseButton.addEventListener("click", evt => {
+        console.log("pause!");
+        audio1.pause();
+      });
+
+      // resume
+      resumeButton.addEventListener("click", evt => {
+        console.log("resume!");
+        audio1.play();
+      });
+
+      // fast forward
+      ffButton.addEventListener("click", evt => {
+        console.log("fast forward!");
+        audio1.playbackRate = 2;
+      });
+
+      // Set focusLoop start time
+      hotkeys("ctrl+space", function(event, handler) {
+        event.preventDefault();
+        console.log("Set focusLoop start");
+        focusLoopStart = audio1.currentTime;
+      });
+      // Set focusLoop end time & focusLoop enable
+      hotkeys("ctrl+shift+space", function(event, handler) {
+        event.preventDefault();
+        console.log("Set focusLoop end & start focusLoop");
+        focusLoopEnd = audio1.currentTime;
+        nowFocusLoop = true;
+      });
+      // Finish focusLoop
+      hotkeys("ctrl+shift+x", function(event, handler) {
+        event.preventDefault();
+        console.log("Finish focusLoop");
+        nowFocusLoop = false;
+      });
+      // minus X sec for focusLoop start
+      hotkeys("ctrl+m", function(event, handler) {
+        const backSec = 2;
+        event.preventDefault();
+        focusLoopStart = focusLoopStart - backSec;
+        audio1.currentTime = focusLoopStart;
+        console.log(`-${backSec}sec`);
+      });
+
+      // focusLoop check
+      setInterval(() => {
+        if (nowFocusLoop) {
+          audio1.playbackRate = 1;
+          // loopback
+          if (audio1.currentTime > focusLoopEnd) {
+            audio1.currentTime = focusLoopStart;
+          }
+        } else {
+          audio1.playbackRate = defaultSpeed;
+        }
+      }, 1000);
+    </script>
+  </body>
+</html>
